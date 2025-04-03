@@ -2,32 +2,38 @@
 # author: Asher Preska Steinberg
 import pandas as pd
 import numpy as np
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import typer
 
+app = typer.Typer()
 
-def main():
+@app.command()
+def main(
+    input_metadata: str = typer.Argument(..., help="metadata sheet from isabl_utils w/ paths to FusionInspector results"),
+    app_version: str = typer.Argument(..., help="filter for results from specific isabl app version"),
+    result_type: str = typer.Argument(..., help="filter on result type in metadata sheet"),
+    fusion_table: str = typer.Argument(..., help="path to output fusion info table"),
+    output_fasta: str = typer.Argument(..., help="path to fasta output"),
+):
     """
-    merge fusion calls across multiple samples based on gene symbols and breakpoints
-    inputs: csv containing paths to FusionInspector or CTAT-LR-Fusion output
-    outputs: csv of merged calls and protein fasta file
+    Merge fusion calls across multiple samples based on gene symbols and breakpoints.
+
+    Args:
+        input_metadata (str): Metadata sheet from isabl_utils with paths to FusionInspector results.
+        app_version (str): Filter for results from a specific isabl app version.
+        result_type (str): Filter on result type in metadata sheet.
+        fusion_table (str): Path to output fusion info table.
+        output_fasta (str): Path to FASTA output.
+
+    Outputs:
+        fusion_table: fusion info table.
+        output_fasta: fasta file of fusions
+
     """
-    parser = ArgumentParser(
-        formatter_class=ArgumentDefaultsHelpFormatter,
-        description="merge fusion calls across multiple samples \
-        based on gene symbols and breakpoints.")
-    parser.add_argument("input_metadata", type=str,
-                        help="metadata sheet from isabl_utils w/ paths to FusionInspector results")
-    parser.add_argument("app_version", type=str, help="filter for results from specific isabl app version")
-    parser.add_argument("result_type", type=str, help="filter on result type in metadata sheet")
-    parser.add_argument("fusion_table", type=str, help="path to output fusion info table")
-    parser.add_argument("output_fasta", type=str, help="path to fasta output")
-    opts = parser.parse_args()
-    # define paths
-    result_csv = opts.input_metadata
-    app_version = opts.app_version
-    result_type = opts.result_type
-    fusion_info_path = opts.fusion_table
-    output_fasta = opts.output_fasta
+    result_csv = input_metadata
+    app_version = app_version
+    result_type = result_type
+    fusion_info_path = fusion_table
+    output_fasta = output_fasta
     # for testing
     # app_version = "0.0.3" # filter for app version
     # result_type = "fusion_predictions" # name of result type to grab
@@ -98,4 +104,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    app()
