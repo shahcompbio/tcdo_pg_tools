@@ -1,0 +1,6 @@
+sphinx
+sphinx-click
+typer
+pandas
+numpy
+click

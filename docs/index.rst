@@ -8,6 +8,7 @@ Welcome to tcdo-pg-tools's documentation!
    readme
    installation
    usage
+   cli
    modules
    contributing
    authors

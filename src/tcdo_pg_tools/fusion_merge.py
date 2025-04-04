@@ -2,32 +2,25 @@
 # author: Asher Preska Steinberg
 import pandas as pd
 import numpy as np
-import typer
+import click
 
-app = typer.Typer()
-
-@app.command()
-def main(
-    input_metadata: str = typer.Argument(..., help="metadata sheet from isabl_utils w/ paths to FusionInspector results"),
-    app_version: str = typer.Argument(..., help="filter for results from specific isabl app version"),
-    result_type: str = typer.Argument(..., help="filter on result type in metadata sheet"),
-    fusion_table: str = typer.Argument(..., help="path to output fusion info table"),
-    output_fasta: str = typer.Argument(..., help="path to fasta output"),
-):
+@click.command()
+@click.argument('input_metadata', type=click.Path(exists=True))
+@click.argument('app_version', type=str)
+@click.argument('result_type', type=str)
+@click.argument('fusion_table', type=click.Path())
+@click.argument('output_fasta', type=click.Path())
+def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_fasta):
     """
     Merge fusion calls across multiple samples based on gene symbols and breakpoints.
 
-    Args:
-        input_metadata (str): Metadata sheet from isabl_utils with paths to FusionInspector results.
-        app_version (str): Filter for results from a specific isabl app version.
-        result_type (str): Filter on result type in metadata sheet.
-        fusion_table (str): Path to output fusion info table.
-        output_fasta (str): Path to FASTA output.
-
-    Outputs:
-        fusion_table: fusion info table.
-        output_fasta: fasta file of fusions
-
+    \b
+    Required arguments:
+      INPUT_METADATA   Metadata sheet from isabl_utils with paths to FusionInspector results.
+      APP_VERSION      Filter for results from a specific Isabl app version.
+      RESULT_TYPE      Filter on result type in metadata sheet.
+      FUSION_TABLE     Path to output fusion info table.
+      OUTPUT_FASTA     Path to output FASTA file.
     """
     result_csv = input_metadata
     app_version = app_version
@@ -103,5 +96,3 @@ def main(
             outfile.write(f"{AAseq}\n")
 
 
-if __name__ == "__main__":
-    app()
