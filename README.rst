@@ -27,7 +27,7 @@ Features
 --------
 
 * Merging RNA fusions across multiple samples which were called by CTAT-LR-Fusion or processed using FusionInspector.
-Currently also needs a metadata sheet from our internal isabl_utils package.
+  Currently also needs a metadata sheet from our internal isabl_utils package.
 
 Credits
 -------
