@@ -5,22 +5,19 @@ import numpy as np
 import click
 
 @click.command()
-@click.argument('input_metadata', type=click.Path(exists=True))
-@click.argument('app_version', type=str)
-@click.argument('result_type', type=str)
-@click.argument('fusion_table', type=click.Path())
-@click.argument('output_fasta', type=click.Path())
+@click.option('-i', '--input_metadata', required=True, type=click.Path(exists=True),
+              help='Metadata sheet from isabl_utils with paths to FusionInspector results')
+@click.option('-v', '--app_version', required=True, type=str,
+                help='Filter for results from a specific Isabl app version')
+@click.option('-r', '--result_type', required=True, type=str,
+              help='Filter on result type in metadata sheet')
+@click.option('-t', '--fusion_table', required=True,
+              type=click.Path(), help="Path to output fusion info table")
+@click.option('-fa','--output_fasta', required=True, type=click.Path(),
+              help="Path to output FASTA file")
 def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_fasta):
     """
     Merge fusion calls across multiple samples based on gene symbols and breakpoints.
-
-    \b
-    Required arguments:
-      INPUT_METADATA   Metadata sheet from isabl_utils with paths to FusionInspector results.
-      APP_VERSION      Filter for results from a specific Isabl app version.
-      RESULT_TYPE      Filter on result type in metadata sheet.
-      FUSION_TABLE     Path to output fusion info table.
-      OUTPUT_FASTA     Path to output FASTA file.
     """
     result_csv = input_metadata
     app_version = app_version
