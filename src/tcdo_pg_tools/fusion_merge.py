@@ -15,7 +15,9 @@ import click
               type=click.Path(), help="Path to output fusion info table")
 @click.option('-fa','--output_fasta', required=True, type=click.Path(),
               help="Path to output FASTA file")
-def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_fasta):
+@click.option('--ill', type=bool, default=False,
+              help="specify if Illumina (default assumes ONT)")
+def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_fasta, ill=False):
     """
     Merge fusion calls across multiple samples based on gene symbols and breakpoints.
     """
@@ -54,6 +56,11 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
     # make a dataframe that contains fusion info
     data = []
     i = 1
+    # specific what to look for in terms of FFPM (if illumina)
+    if ill:
+        ffpm = 'FFPM'
+    else:
+        ffpm = 'LR_FFPM'
     for (genes, ORF, cds_lr, cds1_id, cds2_id), group in fusion_groups:
         # get breakpoint in AA position; will be useful when we match to proteomics later
         if not cds_lr == ".":
@@ -71,7 +78,7 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
             'AA_brk_pos': AA_brk,
             'patients': list(group['patient_id']),
             'isabl_pks': list(group['isabl_pk']),
-            'LR_FFPM': list(group['LR_FFPM']),
+            'FFPM': list(group[ffpm]),
             'Protein': protein_id
         })
     # make the fusion table
