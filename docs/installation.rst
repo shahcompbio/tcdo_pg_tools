@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/apsteinberg/tcdo_pg_tools
+    $ git clone git://github.com/shahcompbio/tcdo_pg_tools
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/apsteinberg/tcdo_pg_tools/tarball/master
+    $ curl -OJL https://github.com/shahcompbio/tcdo_pg_tools/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/apsteinberg/tcdo_pg_tools
-.. _tarball: https://github.com/apsteinberg/tcdo_pg_tools/tarball/master
+.. _Github repo: https://github.com/shahcompbio/tcdo_pg_tools
+.. _tarball: https://github.com/shahcompbio/tcdo_pg_tools/tarball/master

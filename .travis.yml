@@ -24,5 +24,5 @@ deploy:
     secure: PLEASE_REPLACE_ME
   on:
     tags: true
-    repo: apsteinberg/tcdo_pg_tools
+    repo: shahcompbio/tcdo_pg_tools
     python: 3.8

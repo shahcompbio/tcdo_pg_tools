@@ -31,9 +31,9 @@ dev = [
 
 [project.urls]
 
-bugs = "https://github.com/apsteinberg/tcdo_pg_tools/issues"
-changelog = "https://github.com/apsteinberg/tcdo_pg_tools/blob/master/changelog.md"
-homepage = "https://github.com/apsteinberg/tcdo_pg_tools"
+bugs = "https://github.com/shahcompbio/tcdo_pg_tools/issues"
+changelog = "https://github.com/shahcompbio/tcdo_pg_tools/blob/master/changelog.md"
+homepage = "https://github.com/shahcompbio/tcdo_pg_tools"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

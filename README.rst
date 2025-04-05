@@ -6,9 +6,6 @@ tcdo-pg-tools
 .. image:: https://img.shields.io/pypi/v/tcdo_pg_tools.svg
         :target: https://pypi.python.org/pypi/tcdo_pg_tools
 
-.. image:: https://img.shields.io/travis/apsteinberg/tcdo_pg_tools.svg
-        :target: https://travis-ci.com/apsteinberg/tcdo_pg_tools
-
 .. image:: https://readthedocs.org/projects/tcdo-pg-tools/badge/?version=latest
         :target: https://tcdo-pg-tools.readthedocs.io/en/latest/?version=latest
         :alt: Documentation Status
