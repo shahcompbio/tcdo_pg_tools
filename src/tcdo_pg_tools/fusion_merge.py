@@ -15,7 +15,7 @@ import click
               type=click.Path(), help="Path to output fusion info table")
 @click.option('-fa','--output_fasta', required=True, type=click.Path(),
               help="Path to output FASTA file")
-@click.option('--ill', type=bool, default=False,
+@click.option('--ill', is_flag=True, default=False,
               help="specify if Illumina (default assumes ONT)")
 def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_fasta, ill=False):
     """
