@@ -25,6 +25,7 @@ Features
 
 * Merging RNA fusions across multiple samples which were called by CTAT-LR-Fusion or processed using FusionInspector.
   Currently also needs a metadata sheet from our internal isabl_utils package.
+* calculation of AA seq coverage across multiple enzymes using fragpipe results
 
 Credits
 -------
