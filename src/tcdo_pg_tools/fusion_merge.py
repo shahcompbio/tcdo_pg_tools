@@ -81,8 +81,8 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
             'FUSION_TRANSL': ORF,
             'fusioninspector_brk (AA)': AA_brk,
             'patients': ",".join(list(group['patient_id'])),
-            'isabl_pks': ",".join(list(group['isabl_pk'])),
-            'FFPM': ",".join(list(group[ffpm])),
+            'isabl_pks': ",".join(str(pk) for pk in group['isabl_pk']),
+            'FFPM': ",".join(f"{x:.6f}" for x in group[ffpm]),
             'fusioninspector_cds_id': protein_id
         })
     # make the fusion table
