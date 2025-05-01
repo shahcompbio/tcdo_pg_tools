@@ -51,6 +51,8 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
     fusion_groups = fusion_df.groupby(by=["#FusionName",
                                           "FUSION_TRANSL",
                                           "CDS_LEFT_RANGE",
+                                          "CDS_LEFT_ID",
+                                          "CDS_RIGHT_ID",
                                           "LeftGene",
                                           "RightGene",
                                           "LeftBreakpoint",
@@ -63,38 +65,39 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
         ffpm = 'FFPM'
     else:
         ffpm = 'LR_FFPM'
-    for (genes, ORF, cds_lr, leftgene, rightgene, lbrk, rbrk), group in fusion_groups:
+    for (genes, ORF, cds_lr, leftcds, rightcds, leftgene, rightgene, lbrk, rbrk), group in fusion_groups:
         # get breakpoint in AA position; will be useful when we match to proteomics later
         if not cds_lr == ".":
             AA_brk = np.round(int(cds_lr.split("-")[1]) / 3)
-            protein_id = f"GF{i}"
-            i = i + 1
         else:
             AA_brk = cds_lr
-            protein_id = "."
+        # append to dataframe
         data.append({
             '#FusionName': genes,
             'LeftGene': leftgene,
             'RightGene': rightgene,
             'LeftBreakpoint': lbrk,
             'RightBreakpoint': rbrk,
+            'CDS_LEFT_ID': leftcds,
+            'CDS_RIGHT_ID': rightcds,
             'FUSION_TRANSL': ORF,
             'fusioninspector_brk (AA)': AA_brk,
             'patients': ",".join(list(group['patient_id'])),
             'isabl_pks': ",".join(str(pk) for pk in group['isabl_pk']),
             'FFPM': ",".join(f"{x:.6f}" for x in group[ffpm]),
-            'fusioninspector_cds_id': protein_id
+            'fusion_id': f"GF{i}"
         })
+        i = i + 1
     # make the fusion table
     fusion_info_table = pd.DataFrame(data)
     fusion_info_table.to_csv(fusion_info_path, sep="\t", index=None)
     # now let's write the fasta file
     # drop rows without CDS regions
-    fusion_info_table1 = fusion_info_table[fusion_info_table["Protein"].str.startswith("GF")]
+    fusion_info_table1 = fusion_info_table[fusion_info_table["cds_lr"] != "."]
     # write output fasta
     with open(output_fasta, "w+") as outfile:
         for _, row in fusion_info_table1.iterrows():
-            protein_id = row["fusioninspector_cds_id"]
+            protein_id = row["fusion_id"]
             gene = row["#FusionName"]
             ORF_id = row["CDS_LEFT_ID"] + "--" + row["CDS_RIGHT_ID"]
             AAseq = row["FUSION_TRANSL"]
