@@ -93,7 +93,7 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
     fusion_info_table.to_csv(fusion_info_path, sep="\t", index=None)
     # now let's write the fasta file
     # drop rows without CDS regions
-    fusion_info_table1 = fusion_info_table[fusion_info_table["cds_lr"] != "."]
+    fusion_info_table1 = fusion_info_table[fusion_info_table["fusioninspector_brk (AA)"] != "."]
     # write output fasta
     with open(output_fasta, "w+") as outfile:
         for _, row in fusion_info_table1.iterrows():
