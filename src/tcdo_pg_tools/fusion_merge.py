@@ -51,8 +51,10 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
     fusion_groups = fusion_df.groupby(by=["#FusionName",
                                           "FUSION_TRANSL",
                                           "CDS_LEFT_RANGE",
-                                          "CDS_LEFT_ID",
-                                          "CDS_RIGHT_ID"])
+                                          "LeftGene",
+                                          "RightGene",
+                                          "LeftBreakpoint",
+                                          "RightBreakpoint"])
     # make a dataframe that contains fusion info
     data = []
     i = 1
@@ -61,7 +63,7 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
         ffpm = 'FFPM'
     else:
         ffpm = 'LR_FFPM'
-    for (genes, ORF, cds_lr, cds1_id, cds2_id), group in fusion_groups:
+    for (genes, ORF, cds_lr, leftgene, rightgene, lbrk, rbrk), group in fusion_groups:
         # get breakpoint in AA position; will be useful when we match to proteomics later
         if not cds_lr == ".":
             AA_brk = np.round(int(cds_lr.split("-")[1]) / 3)
@@ -72,14 +74,16 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
             protein_id = "."
         data.append({
             '#FusionName': genes,
-            'CDS_LEFT_ID': cds1_id,
-            'CDS_RIGHT_ID': cds2_id,
+            'LeftGene': leftgene,
+            'RightGene': rightgene,
+            'LeftBreakpoint': lbrk,
+            'RightBreakpoint': rbrk,
             'FUSION_TRANSL': ORF,
-            'AA_brk_pos': AA_brk,
-            'patients': list(group['patient_id']),
-            'isabl_pks': list(group['isabl_pk']),
-            'FFPM': list(group[ffpm]),
-            'Protein': protein_id
+            'fusioninspector_brk (AA)': AA_brk,
+            'patients': ",".join(list(group['patient_id'])),
+            'isabl_pks': ",".join(list(group['isabl_pk'])),
+            'FFPM': ",".join(list(group[ffpm])),
+            'fusioninspector_cds_id': protein_id
         })
     # make the fusion table
     fusion_info_table = pd.DataFrame(data)
@@ -90,7 +94,7 @@ def fusion_merge(input_metadata, app_version, result_type, fusion_table, output_
     # write output fasta
     with open(output_fasta, "w+") as outfile:
         for _, row in fusion_info_table1.iterrows():
-            protein_id = row["Protein"]
+            protein_id = row["fusioninspector_cds_id"]
             gene = row["#FusionName"]
             ORF_id = row["CDS_LEFT_ID"] + "--" + row["CDS_RIGHT_ID"]
             AAseq = row["FUSION_TRANSL"]
