@@ -89,11 +89,11 @@ def coverage_calculator(fragpipe_dir, enzymes, output_tsv, unique_proteins, uniq
     proteindat = pd.DataFrame()
     for i in np.arange(0, len(enzymes)):
         enzyme = enzymes[i]
-        pattern = os.path.join(archive, f"{enzyme}*", "protein.tsv")
-        path = bob.glob(pattern)
-        assert len(path) == 1, \
+        pattern = os.path.join(archive, f"{enzyme}**", "protein.tsv")
+        paths = glob.glob(pattern, recursive=True)
+        assert len(paths) == 1, \
             f"multiple protein.tsv files returned for {enzyme}; check subdirectory naming scheme"
-        path = path[0]
+        path = paths[0]
         df = pd.read_csv(path, sep="\t")
         df["enzyme"] = enzyme
         proteindat = pd.concat([proteindat, df])
