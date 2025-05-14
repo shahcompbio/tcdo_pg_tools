@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tcdo_pg_tools"
-version = "0.0.3"
+version = "0.0.3-beta"
 description = "Commandline tools to support proteogenomics analyses at MSK TCDO and beyond"
 readme = "README.rst"
 authors = [
