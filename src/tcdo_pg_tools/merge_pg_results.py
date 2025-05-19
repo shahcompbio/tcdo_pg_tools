@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """
 author: Asher Preska Steinberg
-merge multiple fasta on sequence identity
+merge proteomegenerator results across multiple samples on AA seq identity
 """
 import pandas as pd
-import glob as bob
-import os
-import numpy as np
 from tqdm import tqdm
-import itertools
-from numba import njit
 import click
 from marsilea.upset import Upset, UpsetData
 import matplotlib.pyplot as plt
@@ -54,7 +49,9 @@ def plot_upset(countdat, upset_path):
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
-              help='three column format csv (path: fasta path, name: sample name, condition: condition)')
+              help='four column csv (fasta: fasta path, '
+                   'protein_table: protein.tsv path, '
+                   'name: sample name, condition: condition)')
 @click.option('-t', '--info_table', required=False,
               default='info_table.tsv',
               type=click.Path(), help="Path to index tsv for merged protein IDs")
@@ -65,17 +62,9 @@ def plot_upset(countdat, upset_path):
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
               help="Path to upset plot")
-def fasta_merge(input_csv, info_table, merged_fasta, upset, upset_path):
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=True):
     """
-    merge multiple fasta on sequence identity
-    Args:
-        input_csv: input csv with two columns (path: path to fasta, name: sample name, condition: condition (e.g., tumor, normal))
-        info_table: path to index tsv for merged protein IDs (default: info_table.tsv)
-        merged_fasta: path to merged fasta file (default: merged.fasta)
-        upset: plot upset for different conditions (default: False)
-        upset_path: path to upset plot (default: upset_plot.svg)
-    Returns:
-
+    merge proteomegenerator results across multiple samples on AA seq identity
     """
     # read in metadata
     metadata = pd.read_csv(input_csv)
@@ -89,6 +78,14 @@ def fasta_merge(input_csv, info_table, merged_fasta, upset, upset_path):
         # load in the protein fasta file as well
         seqdat = fasta2df(fasta, sample=sample)
         seqdat["condition"] = condition
+        # filter for unique proteins
+        if unique_proteins:
+            philosopher_path = row["protein_table"]
+            philosopher_dat = pd.read_csv(philosopher_path, sep="\t")
+            philosopher_dat =  philosopher_dat[ philosopher_dat["Indistinguishable Proteins"].isna()]
+            unique_proteins = list(philosopher_dat["Protein"])
+            seqdat = seqdat[seqdat["protein"].isin(unique_proteins)]
+        # append sample to dataframe
         protein_dat = pd.concat([protein_dat, seqdat])
     # perform groupby
     grouped = protein_dat.groupby(by=["seq"])
