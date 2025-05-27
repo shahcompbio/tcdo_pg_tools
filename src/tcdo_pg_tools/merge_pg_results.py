@@ -90,7 +90,7 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
                 unique_proteins = list(philosopher_dat["Protein"])
                 seqdat = seqdat[seqdat["protein"].isin(unique_proteins)]
             else:
-                f"no protein tsv file provided for sample/condition: {sample}/{condition}"
+                print(f"no protein tsv file provided for sample/condition: {sample}/{condition}")
                 no_quant.append(sample)
         # append sample to dataframe
         protein_dat = pd.concat([protein_dat, seqdat])
