@@ -1,0 +1,5 @@
+fasta,protein_table,sample,condition
+/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/fasta_files/AML_Celllines/Fasta/Celllines/PROTEOMEGENERATOR_47038_proteome_CD34_comb_fasta.fa,/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/IRIS_output/CD34+_1/FragPipe_DIA_fasta_V2/1A/out/protein.tsv,CD34+,control
+/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/fasta_files/AML_Celllines/Fasta/Celllines/PROTEOMEGENERATOR_45382_proteome_MV4-11_fasta.fa,/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/IRIS_output/MV4-11/MA/FragPipe_MA_DIA_fasta/out/protein.tsv,MV4-11,AML
+/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/fasta_files/AML_Celllines/Fasta/Celllines/PROTEOMEGENERATOR_45642_proteome_Kasumi_1_fasta.fa,/Volumes/kentsis/proteomics/data/Laura/Multi-protease_fractionation/IRIS_output/Kasumi-1/KA/FragPipe_KA_DIA_fasta/out/protein.tsv,Kasumi-1,AML
+/Volumes/kentsis/proteomics/databases/swissprot_homosapiens/2025-02-06-reviewed-isoforms-UP000005640.fas,,SwissProt,SwissProt

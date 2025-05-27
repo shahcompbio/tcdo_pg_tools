@@ -3,6 +3,7 @@
 author: Asher Preska Steinberg
 merge proteomegenerator results across multiple samples on AA seq identity
 """
+import os
 import pandas as pd
 from tqdm import tqdm
 import click
@@ -79,12 +80,18 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
         seqdat = fasta2df(fasta, sample=sample)
         seqdat["condition"] = condition
         # filter for unique proteins
+        # get list of samples where no peptide tsv was provided
+        no_quant = []
         if unique_proteins:
             philosopher_path = row["protein_table"]
-            philosopher_dat = pd.read_csv(philosopher_path, sep="\t")
-            philosopher_dat =  philosopher_dat[ philosopher_dat["Indistinguishable Proteins"].isna()]
-            unique_proteins = list(philosopher_dat["Protein"])
-            seqdat = seqdat[seqdat["protein"].isin(unique_proteins)]
+            if type(philosopher_path) is not float and os.path.exists(philosopher_path):
+                philosopher_dat = pd.read_csv(philosopher_path, sep="\t")
+                philosopher_dat =  philosopher_dat[ philosopher_dat["Indistinguishable Proteins"].isna()]
+                unique_proteins = list(philosopher_dat["Protein"])
+                seqdat = seqdat[seqdat["protein"].isin(unique_proteins)]
+            else:
+                f"no protein tsv file provided for sample/condition: {sample}/{condition}"
+                no_quant.append(sample)
         # append sample to dataframe
         protein_dat = pd.concat([protein_dat, seqdat])
     # perform groupby
@@ -100,7 +107,7 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
         protein_ids = joinset(group["protein"])
         # store data
         data.append({
-            "sequence": seq,
+            "sequence": seq[0],
             "Protein_ids": protein_ids,
             "unique_protein_id": f"PG{i}", # give protein a unique identifier
             "samples": samples,
@@ -110,6 +117,8 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
         i = i+1
     # write dataframe to tsv
     countdat = pd.DataFrame(data)
+    if unique_proteins:
+        countdat = countdat[~countdat["samples"].isin(no_quant)]
     countdat.to_csv(info_table, sep="\t", index=False)
     # write to merged fasta file
     with open(merged_fasta, "w+") as f:
