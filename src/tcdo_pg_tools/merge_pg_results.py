@@ -112,7 +112,7 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
             "unique_protein_id": f"PG{i}", # give protein a unique identifier
             "samples": samples,
             "conditions": conditions,
-            "sample_count": len(group)
+            "sample_count": len(set(group["sample"]))
         })
         i = i+1
     # write dataframe to tsv
@@ -130,4 +130,5 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, uni
     # plot upset plot:
     if upset:
         plot_upset(countdat, upset_path)
-    return
+if __name__ == '__main__':
+    merge_pg_results()

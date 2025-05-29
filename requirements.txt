@@ -1,9 +1,9 @@
 sphinx
 sphinx-click
-pandas
-numpy
-click
-tqdm
-numba
-marsilea
-matplotlib
+pandas>=2.2.3
+numpy>=2.2.6
+click>=8.2.1
+tqdm>=4.67.1
+numba>=0.61.2
+marsilea>=0.5.3
+matplotlib>=3.10.3
