@@ -1,8 +1,7 @@
 import click
 from tcdo_pg_tools.fusion_merge import fusion_merge
 from tcdo_pg_tools.coverage_calculator import coverage_calculator
-from tcdo_pg_tools.merge_pg_results import merge_pg_results
-from tcdo_pg_tools.merge_fasta import merge_fasta
+from tcdo_pg_tools.merge_proteome import merge_pg_results, merge_fasta
 
 @click.group()
 def cli():
