@@ -48,7 +48,8 @@ def plot_upset(countdat, upset_path):
     plt.savefig(upset_path, dpi=300, bbox_inches="tight")
     return
 
-def merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=True):
+def merge_proteome(input_csv, info_table, merged_fasta, upset,
+                   upset_path, unique_proteins=True, decoy_contam=False):
     """
     merge proteomegenerator fasta/results across multiple samples on AA seq identity
     """
@@ -104,6 +105,10 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, uniqu
     countdat = pd.DataFrame(data)
     if unique_proteins:
         countdat = countdat[~countdat["samples"].isin(no_quant)]
+    # also filter for decoys and contams
+    if decoy_contam:
+        countdat = countdat[~countdat["Protein_ids"].str.contains("contam_")]
+        countdat = countdat[~countdat["Protein_ids"].str.contains("rev_")]
     countdat.to_csv(info_table, sep="\t", index=False)
     # write to merged fasta file
     with open(merged_fasta, "w+") as f:
@@ -132,11 +137,14 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, uniqu
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
               help="Path to upset plot")
-def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path):
+@click.option('--filter_decoy_contam',
+              is_flag=True, default=False, help="filter out decoys and contaminants (with prefixes rev_ & contam_, respectively)")
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_decoy_contam):
     """
     merge proteomegenerator results across multiple samples on AA seq identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=True)
+    return merge_proteome(input_csv, info_table, merged_fasta,
+                          upset, upset_path, unique_proteins=True, decoy_contam=filter_decoy_contam)
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
@@ -152,8 +160,10 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path):
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
               help="Path to upset plot")
-def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path):
+@click.option('--filter_decoy_contam',
+              is_flag=True, default=False, help="filter out decoys and contaminants (with prefixes rev_ & contam_, respectively)")
+def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_decoy_contam):
     """
     merge multiple fasta on sequence identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False)
+    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, decoy_contam=filter_decoy_contam)
