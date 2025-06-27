@@ -17,22 +17,39 @@ def fasta2df(uniprotfastapath, sample="swissprot"):
     with open(uniprotfastapath, "r") as file:
         uniprotfasta = file.readlines()
     ### make it a dataframe ...
-    status = [] ## canonical, non-canonical, fusion ...
-    IDs = []
     seqs = []
-    i = 0
+    data = []
     for line in uniprotfasta:
         if line.startswith(">"):
             terms = line.split(" ")
             ID = terms[0]
             _, ID = ID.split(">")
-            IDs.append(ID.strip())
+            # extract protein info
+            id_terms = ID.split("|")
+            if len(terms) == 3:
+                db, UniqueID, EntryName = id_terms
+            else:
+                db, UniqueID, EntryName = "", "", ""
+            # extract gene name
+            geneName = ""
+            for term in terms:
+                if term.startswith("GN="):
+                    _, geneName = term.split("=")
+                    break
+            data.append({
+                "db": db,
+                "protein": ID.strip(),
+                "accession_number": UniqueID,
+                "entry_name": EntryName,
+                "gene_name": geneName,
+                "sample": sample
+            })
         else:
             seqs.append(line.strip())
-        status.append(sample)
-    uniprotseqdat = pd.DataFrame(zip(IDs, status, seqs), columns = ["protein", "sample", "seq"])
-    uniprotseqdat.reset_index(drop=True, inplace=True)
-    return uniprotseqdat
+    seqdat = pd.DataFrame(data)
+    seqdat["seq"] = seqs
+    seqdat.reset_index(drop=True, inplace=True)
+    return seqdat
 
 def joinset(IDs, sort=False):
     ID = list(set(IDs))
@@ -40,6 +57,20 @@ def joinset(IDs, sort=False):
         ID.sort()
     ID = ','.join(ID)
     return ID
+
+def get_protein_info(group):
+    # check if we have a swissprot protein:
+    sp_df = group[group["protein"].str.contains("sp|")]
+    if len(sp_df) > 0:
+        uniprot_id = sp_df.iloc[0]["accession_number"]
+        uniprot_entryname = sp_df.iloc[0]["entry_name"]
+        gene_name = sp_df.iloc[0]["gene_name"]
+    else:
+        uniprot_id = ""
+        uniprot_entryname = group.iloc[0]["entry_name"]
+        gene_name = group.iloc[0]["gene_name"]
+    return uniprot_id, uniprot_entryname, gene_name
+
 
 def plot_upset(countdat, upset_path):
     upset_data = UpsetData.from_memberships(countdat.conditions.str.split(","))
@@ -91,11 +122,16 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
         samples = joinset(group["sample"])
         conditions = joinset(group["condition"], sort=True)
         protein_ids = joinset(group["protein"])
+        # get protein info
+        uniprot_id, uniprot_entryname, gene_name = get_protein_info(group)
         # store data
         data.append({
             "sequence": seq[0],
-            "Protein_ids": protein_ids,
+            "protein_ids": protein_ids,
             "unique_protein_id": f"PG{i}", # give protein a unique identifier
+            "uniprot_id": uniprot_id,
+            "protein_name": uniprot_entryname,
+            "gene_name": gene_name,
             "samples": samples,
             "conditions": conditions,
             "sample_count": len(set(group["sample"]))
