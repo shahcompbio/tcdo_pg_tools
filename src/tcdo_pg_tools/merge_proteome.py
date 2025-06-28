@@ -4,6 +4,7 @@ author: Asher Preska Steinberg
 merge proteomegenerator fasta and results across multiple samples on AA seq identity
 """
 import os
+import re
 import pandas as pd
 from tqdm import tqdm
 import click
@@ -150,8 +151,8 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
     # also filter for decoys and contams
     if filter != "":
         prefixes = filter.split(",")
-        filter_list = "|".join(prefixes)
-        countdat = countdat[~countdat["protein_ids"].str.contains(filter_list)]
+        pattern = "|".join(re.escape(p) for p in prefixes)
+        countdat = countdat[~countdat["protein_ids"].str.contains(pattern)]
     # write to merged fasta file
     with open(merged_fasta, "w+") as f:
         for _, row in countdat.iterrows():
@@ -179,23 +180,27 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
                    'name: sample name, condition: condition)')
 @click.option('-t', '--info_table', required=False,
               default='info_table.tsv',
+              show_default=True,
               type=click.Path(), help="Path to index tsv for merged protein IDs")
 @click.option('-fa','--merged_fasta', required=False,
               type=click.Path(), default='merged.fasta',
+              show_default=True,
               help="Path to merged fasta file")
 @click.option('--upset', is_flag=True, default=False, help="plot upset")
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
+              show_default=True,
               help="Path to upset plot")
 @click.option('--filter_by_header',
-              default="contam_,rev_",
+              default="contam_,rev_,tr|GF",
+              show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
-def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_prefix):
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header):
     """
     merge proteomegenerator results across multiple samples on AA seq identity
     """
     return merge_proteome(input_csv, info_table, merged_fasta,
-                          upset, upset_path, unique_proteins=True, filter=filter_by_prefix)
+                          upset, upset_path, unique_proteins=True, filter=filter_by_header)
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
@@ -203,22 +208,24 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, fil
                    'name: sample name, condition: condition)')
 @click.option('-t', '--info_table', required=False,
               default='info_table.tsv',
+              show_default=True,
               type=click.Path(), help="Path to index tsv for merged protein IDs")
 @click.option('-fa','--merged_fasta', required=False,
               type=click.Path(), default='merged.fasta',
-              help="Path to merged fasta file")
+              show_default=True, help="Path to merged fasta file")
 @click.option('--upset', is_flag=True, default=False, help="plot upset")
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
-              help="Path to upset plot")
+              show_default=True, help="Path to upset plot")
 @click.option('--filter_by_header',
-              default="contam_,rev_",
+              default="contam_,rev_,tr|GF",
+              show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
-def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_prefix):
+def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header):
     """
     merge multiple fasta on sequence identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, filter=filter_by_prefix)
+    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, filter=filter_by_header)
 
 if __name__ == "__main__":
     merge_pg_results()  # or merge_fasta() if you're testing that
