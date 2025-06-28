@@ -26,7 +26,7 @@ def fasta2df(uniprotfastapath, sample="swissprot"):
             _, ID = ID.split(">")
             # extract protein info
             id_terms = ID.split("|")
-            if len(terms) == 3:
+            if len(id_terms) == 3:
                 db, UniqueID, EntryName = id_terms
             else:
                 db, UniqueID, EntryName = "", "", ""
@@ -41,8 +41,9 @@ def fasta2df(uniprotfastapath, sample="swissprot"):
                 "protein": ID.strip(),
                 "accession_number": UniqueID,
                 "entry_name": EntryName,
-                "gene_name": geneName,
-                "sample": sample
+                "gene_name": geneName.strip(),
+                "sample": sample,
+                "header": line
             })
         else:
             seqs.append(line.strip())
@@ -65,11 +66,13 @@ def get_protein_info(group):
         uniprot_id = sp_df.iloc[0]["accession_number"]
         uniprot_entryname = sp_df.iloc[0]["entry_name"]
         gene_name = sp_df.iloc[0]["gene_name"]
+        header = sp_df.iloc[0]["header"]
     else:
         uniprot_id = ""
         uniprot_entryname = group.iloc[0]["entry_name"]
         gene_name = group.iloc[0]["gene_name"]
-    return uniprot_id, uniprot_entryname, gene_name
+        header = ""
+    return uniprot_id, uniprot_entryname, gene_name, header
 
 
 def plot_upset(countdat, upset_path):
@@ -80,7 +83,7 @@ def plot_upset(countdat, upset_path):
     return
 
 def merge_proteome(input_csv, info_table, merged_fasta, upset,
-                   upset_path, unique_proteins=True, decoy_contam=False):
+                   upset_path, unique_proteins=True, filter=""):
     """
     merge proteomegenerator fasta/results across multiple samples on AA seq identity
     """
@@ -123,18 +126,21 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
         conditions = joinset(group["condition"], sort=True)
         protein_ids = joinset(group["protein"])
         # get protein info
-        uniprot_id, uniprot_entryname, gene_name = get_protein_info(group)
+        unique_identifier, uniprot_entryname, gene_name, header = get_protein_info(group)
+        if unique_identifier == "":
+            unique_identifier = f"PG{i}"
+            i += 1
         # store data
         data.append({
             "sequence": seq[0],
             "protein_ids": protein_ids,
-            "unique_protein_id": f"PG{i}", # give protein a unique identifier
-            "uniprot_id": uniprot_id,
+            "unique_identifier": unique_identifier, # give protein a unique identifier
             "protein_name": uniprot_entryname,
             "gene_name": gene_name,
             "samples": samples,
             "conditions": conditions,
-            "sample_count": len(set(group["sample"]))
+            "sample_count": len(set(group["sample"])),
+            "header": header
         })
         i = i+1
     # write dataframe to tsv
@@ -142,17 +148,25 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
     if unique_proteins:
         countdat = countdat[~countdat["samples"].isin(no_quant)]
     # also filter for decoys and contams
-    if decoy_contam:
-        countdat = countdat[~countdat["Protein_ids"].str.contains("contam_")]
-        countdat = countdat[~countdat["Protein_ids"].str.contains("rev_")]
-    countdat.to_csv(info_table, sep="\t", index=False)
+    if filter != "":
+        prefixes = filter.split(",")
+        filter_list = "|".join(prefixes)
+        countdat = countdat[~countdat["protein_ids"].str.contains(filter_list)]
     # write to merged fasta file
     with open(merged_fasta, "w+") as f:
         for _, row in countdat.iterrows():
-            id = row["unique_protein_id"]
+            header = row["header"]
             seq = row["sequence"]
-            f.write(f">{id}\n")
+            if header == "":
+                id = row["unique_identifier"]
+                protein = row["protein_name"]
+                gene = row["gene_name"]
+                header = f">tr|{id}|{protein} PG3 predicted ORF OS=Homo sapiens OX=9606 GN={gene} PE=2\n"
+            f.write(header)
             f.write(f"{seq}\n")
+    # write dataframe to csv
+    countdat = countdat.drop("header", axis=1)
+    countdat.to_csv(info_table, sep="\t", index=False)
     # plot upset plot:
     if upset:
         plot_upset(countdat, upset_path)
@@ -173,14 +187,15 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
               help="Path to upset plot")
-@click.option('--filter_decoy_contam',
-              is_flag=True, default=False, help="filter out decoys and contaminants (with prefixes rev_ & contam_, respectively)")
-def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_decoy_contam):
+@click.option('--filter_by_header',
+              default="contam_,rev_",
+              help="filter out proteins by header prefix (provide comma separated list)")
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_prefix):
     """
     merge proteomegenerator results across multiple samples on AA seq identity
     """
     return merge_proteome(input_csv, info_table, merged_fasta,
-                          upset, upset_path, unique_proteins=True, decoy_contam=filter_decoy_contam)
+                          upset, upset_path, unique_proteins=True, filter=filter_by_prefix)
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
@@ -196,10 +211,15 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, fil
 @click.option('--upset_path', required=False,
               type=click.Path(), default='upset_plot.svg',
               help="Path to upset plot")
-@click.option('--filter_decoy_contam',
-              is_flag=True, default=False, help="filter out decoys and contaminants (with prefixes rev_ & contam_, respectively)")
-def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_decoy_contam):
+@click.option('--filter_by_header',
+              default="contam_,rev_",
+              help="filter out proteins by header prefix (provide comma separated list)")
+def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_prefix):
     """
     merge multiple fasta on sequence identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, decoy_contam=filter_decoy_contam)
+    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, filter=filter_by_prefix)
+
+if __name__ == "__main__":
+    merge_pg_results()  # or merge_fasta() if you're testing that
+
