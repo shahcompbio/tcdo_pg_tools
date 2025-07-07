@@ -6,8 +6,9 @@ merge proteomegenerator fasta and results across multiple samples on AA seq iden
 import os
 import re
 import pandas as pd
-from tqdm import tqdm
 import click
+from tqdm import tqdm
+from importlib.resources import files
 from marsilea.upset import Upset, UpsetData
 import matplotlib.pyplot as plt
 
@@ -20,8 +21,14 @@ def fasta2df(uniprotfastapath, sample="swissprot"):
     ### make it a dataframe ...
     seqs = []
     data = []
+    current_seq = ""
     for line in uniprotfasta:
         if line.startswith(">"):
+            # if we already have a sequence, save it
+            if current_seq:
+                seqs.append(current_seq)
+                current_seq = ""
+            # now parse the new header
             terms = line.split(" ")
             ID = terms[0]
             _, ID = ID.split(">")
@@ -47,7 +54,11 @@ def fasta2df(uniprotfastapath, sample="swissprot"):
                 "header": line
             })
         else:
-            seqs.append(line.strip())
+            # accumulate sequence lines
+            current_seq += line.strip()
+    # after the loop, don’t forget the last record
+    if current_seq:
+        seqs.append(current_seq)
     seqdat = pd.DataFrame(data)
     seqdat["seq"] = seqs
     seqdat.reset_index(drop=True, inplace=True)
@@ -84,7 +95,7 @@ def plot_upset(countdat, upset_path):
     return
 
 def merge_proteome(input_csv, info_table, merged_fasta, upset,
-                   upset_path, unique_proteins=True, filter=""):
+                   upset_path, unique_proteins=True, filter="", filter_crap=""):
     """
     merge proteomegenerator fasta/results across multiple samples on AA seq identity
     """
@@ -115,7 +126,14 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
                 no_quant.append(sample)
         # append sample to dataframe
         protein_dat = pd.concat([protein_dat, seqdat])
-    # perform groupby
+    # filter out contaminants proteins
+    if filter_crap != "":
+        crap_dat = fasta2df(filter_crap, sample="crap")
+        crap_seqs = list(crap_dat["seq"])
+        # filter out contaminants
+        print("filtering contaminants")
+        protein_dat = protein_dat[~protein_dat["seq"].isin(crap_seqs)]
+    # group proteins by sequence
     grouped = protein_dat.groupby(by=["seq"])
     # reorganize to some comprehensible output
     data = []
@@ -195,12 +213,16 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
               default="contam_,rev_,tr|GF",
               show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
-def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header):
+@click.option('--filter_crap',
+              default=files("tcdo_pg_tools").joinpath("250707.crap.fasta"),
+              show_default=True,
+              help="filter out contaminants")
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
     """
     merge proteomegenerator results across multiple samples on AA seq identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta,
-                          upset, upset_path, unique_proteins=True, filter=filter_by_header)
+    return merge_proteome(input_csv, info_table, merged_fasta, upset,
+                          upset_path, unique_proteins=True, filter=filter_by_header, filter_crap=filter_crap)
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
@@ -221,12 +243,17 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, fil
               default="contam_,rev_,tr|GF",
               show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
-def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header):
+@click.option('--filter_crap',
+              default=files("tcdo_pg_tools").joinpath("250707.crap.fasta"),
+              show_default=True,
+              help="filter out contaminants")
+def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
     """
     merge multiple fasta on sequence identity
     """
-    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path, unique_proteins=False, filter=filter_by_header)
+    return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path,
+                          unique_proteins=False, filter=filter_by_header,filter_crap=filter_crap)
 
 if __name__ == "__main__":
-    merge_pg_results()  # or merge_fasta() if you're testing that
+    merge_fasta()  # or merge_fasta() if you're testing that
 
