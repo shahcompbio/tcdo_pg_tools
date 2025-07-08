@@ -214,7 +214,7 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
               show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
 @click.option('--filter_crap',
-              default=files("tcdo_pg_tools").joinpath("250707.crap.fasta"),
+              default=files("tcdo_pg_tools").joinpath("philosopher.crap-gpmdb.fas"),
               show_default=True,
               help="filter out contaminants")
 def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
@@ -244,7 +244,7 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, fil
               show_default=True,
               help="filter out proteins by header prefix (provide comma separated list)")
 @click.option('--filter_crap',
-              default=files("tcdo_pg_tools").joinpath("250707.crap.fasta"),
+              default=files("tcdo_pg_tools").joinpath("philosopher.crap-gpmdb.fas"),
               show_default=True,
               help="filter out contaminants")
 def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
