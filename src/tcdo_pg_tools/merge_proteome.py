@@ -12,7 +12,7 @@ from importlib.resources import files
 from marsilea.upset import Upset, UpsetData
 import matplotlib.pyplot as plt
 
-def fasta2df(uniprotfastapath, sample="swissprot"):
+def fasta2df(uniprotfastapath, sample):
     """
     fasta to pandas dataframe
     """
@@ -103,6 +103,8 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
     metadata = pd.read_csv(input_csv)
     # initialize dataframe for merging fasta
     protein_dat = pd.DataFrame()
+    # get list of samples we don't have quantification for
+    no_quant = []
     print("loading fasta files ...")
     for _, row in metadata.iterrows():
         fasta = row["fasta"]
@@ -113,7 +115,6 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
         seqdat["condition"] = condition
         # filter for unique proteins
         # get list of samples where no peptide tsv was provided
-        no_quant = []
         if unique_proteins:
             philosopher_path = row["protein_table"]
             if type(philosopher_path) is not float and os.path.exists(philosopher_path):
@@ -255,5 +256,5 @@ def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_b
                           unique_proteins=False, filter=filter_by_header,filter_crap=filter_crap)
 
 if __name__ == "__main__":
-    merge_fasta()  # or merge_fasta() if you're testing that
+    merge_pg_results()  # or merge_fasta() if you're testing that
 
