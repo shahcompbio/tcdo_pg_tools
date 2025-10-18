@@ -73,7 +73,7 @@ def joinset(IDs, sort=False):
 
 def get_protein_info(group):
     # check if we have a swissprot protein:
-    sp_df = group[group["protein"].str.contains("sp|")]
+    sp_df = group[group["protein"].str.contains("sp|", regex=False)]
     if len(sp_df) > 0:
         uniprot_id = sp_df.iloc[0]["accession_number"]
         uniprot_entryname = sp_df.iloc[0]["entry_name"]
@@ -162,7 +162,6 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
             "sample_count": len(set(group["sample"])),
             "header": header
         })
-        i = i+1
     # write dataframe to tsv
     countdat = pd.DataFrame(data)
     if unique_proteins:
