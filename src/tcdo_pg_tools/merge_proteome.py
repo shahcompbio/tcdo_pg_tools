@@ -37,9 +37,9 @@ def fasta2df(uniprotfastapath, sample):
             if len(id_terms) == 3:
                 db, UniqueID, EntryName = id_terms
             else:
-                db, UniqueID, EntryName = "", "", ""
+                db, UniqueID, EntryName = "unknown", "unknown", "unknown"
             # extract gene name
-            geneName = ""
+            geneName = "unknown"
             for term in terms:
                 if term.startswith("GN="):
                     _, geneName = term.split("=")
@@ -95,7 +95,8 @@ def plot_upset(countdat, upset_path):
     return
 
 def merge_proteome(input_csv, info_table, merged_fasta, upset,
-                   upset_path, unique_proteins=True, filter="", filter_crap=""):
+                   upset_path, unique_proteins=True, filter="",
+                   filter_crap="", no_uniprot_headers = False):
     """
     merge proteomegenerator fasta/results across multiple samples on AA seq identity
     """
@@ -176,7 +177,11 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
         for _, row in countdat.iterrows():
             header = row["header"]
             seq = row["sequence"]
-            if header == "":
+            ## if we have non-uniprot-style headers
+            if no_uniprot_headers:
+                header = f">{id}\n"
+            ## give a uniprot style id otherwise
+            elif header == "":
                 id = row["unique_identifier"]
                 protein = row["protein_name"]
                 gene = row["gene_name"]
@@ -217,12 +222,14 @@ def merge_proteome(input_csv, info_table, merged_fasta, upset,
               default=files("tcdo_pg_tools").joinpath("philosopher.crap-gpmdb.fas"),
               show_default=True,
               help="filter out contaminants")
-def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
+@click.option('--no_uniprot_headers', is_flag=True, help = "if fasta headers are not uniprot header-style")
+def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap, no_uniprot_headers):
     """
     merge proteomegenerator results across multiple samples on AA seq identity
     """
     return merge_proteome(input_csv, info_table, merged_fasta, upset,
-                          upset_path, unique_proteins=True, filter=filter_by_header, filter_crap=filter_crap)
+                          upset_path, unique_proteins=True, filter=filter_by_header,
+                          filter_crap=filter_crap, no_uniprot_headers=no_uniprot_headers)
 
 @click.command()
 @click.option('-i', '--input_csv', required=True, type=click.Path(exists=True),
@@ -247,12 +254,14 @@ def merge_pg_results(input_csv, info_table, merged_fasta, upset, upset_path, fil
               default=files("tcdo_pg_tools").joinpath("philosopher.crap-gpmdb.fas"),
               show_default=True,
               help="filter out contaminants")
-def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap):
+@click.option('--no_uniprot_headers', is_flag=True, help = "if fasta headers are not uniprot header-style")
+def merge_fasta(input_csv, info_table, merged_fasta, upset, upset_path, filter_by_header, filter_crap, no_uniprot_headers):
     """
     merge multiple fasta on sequence identity
     """
     return merge_proteome(input_csv, info_table, merged_fasta, upset, upset_path,
-                          unique_proteins=False, filter=filter_by_header,filter_crap=filter_crap)
+                          unique_proteins=False, filter=filter_by_header,
+                          filter_crap=filter_crap, no_uniprot_headers= no_uniprot_headers)
 
 if __name__ == "__main__":
     merge_pg_results()  # or merge_fasta() if you're testing that
