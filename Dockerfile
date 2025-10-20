@@ -1,4 +1,4 @@
-FROM python:3.13
+FROM quay.io/biocontainers/python:3.13
 LABEL authors="asherpreskasteinberg"
 
 WORKDIR /usr/src/app
